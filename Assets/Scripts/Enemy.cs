@@ -3,7 +3,7 @@ using UnityEngine;
 public class Enemy : MonoBehaviour
 {
     public float health = 100f;
-    public int coinDrop = 1;
+    public int soulDrop = 1;
     public float speed = 5.0f;
     public float attackDamage = 10.0f;
     public float attackCooldown = 1.0f;
@@ -76,7 +76,7 @@ public class Enemy : MonoBehaviour
 
         if (killedByPlayer)
         {
-            CoinManager.instance.AddCoins(coinDrop);  // Add coins if killed by player
+            SoulManager.instance.AddSouls(soulDrop);  // Add souls if killed by player
         }
 
         Destroy(gameObject);

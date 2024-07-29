@@ -16,6 +16,17 @@ public class EnemySpawner : MonoBehaviour
 
     private bool isSpawning = true;
 
+    // Difficulty Settings
+    public float initialMinSpawnInterval = 2f;
+    public float initialMaxSpawnInterval = 3f;
+    public int initialMaxEnemies = 5;
+    public float difficultyIncreaseInterval = 30f;
+    public int difficultyLevel = 0;
+    public float spawnIntervalDecreasePerLevel = 0.2f; // How much the interval decreases per level
+
+    private float timeSinceLastDifficultyIncrease = 0f;
+
+
     void Start()
     {
         if (towerTransform == null)
@@ -39,6 +50,31 @@ public class EnemySpawner : MonoBehaviour
         isSpawning = false;
     }
 
+    private void Update()
+    {
+        timeSinceLastDifficultyIncrease += Time.deltaTime;
+
+        if (timeSinceLastDifficultyIncrease >= difficultyIncreaseInterval)
+        {
+            IncreaseDifficulty();
+            timeSinceLastDifficultyIncrease = 0f;
+        }
+
+    }
+    
+    private void IncreaseDifficulty()
+    {
+        difficultyLevel++;
+
+        // Decrease spawn intervals based on difficulty level
+        minSpawnInterval = Mathf.Max(0.5f, initialMinSpawnInterval - (difficultyLevel * spawnIntervalDecreasePerLevel));
+        maxSpawnInterval = Mathf.Max(1f, initialMaxSpawnInterval - (difficultyLevel * spawnIntervalDecreasePerLevel));
+
+        // Increase max enemies on screen based on difficulty level
+        maxEnemiesPerWave = initialMaxEnemies + difficultyLevel;
+
+        // You can adjust other properties (speed, health, damage) here as well
+    }
     IEnumerator SpawnEnemies()
     {
         while (isSpawning)
@@ -92,7 +128,13 @@ public class EnemySpawner : MonoBehaviour
                 }
             }
         }
+
     }
+
+
+
+
+
 
     int GetRandomPrefabIndex()
     {

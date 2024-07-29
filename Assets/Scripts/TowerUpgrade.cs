@@ -16,27 +16,27 @@ public class TowerUpgrade : MonoBehaviour
 
     void UpgradeAttackSpeed()
     {
-        if (CoinManager.instance.SpendCoins(attackSpeedUpgradeCost))
+        if (SoulManager.instance.SpendSouls(attackSpeedUpgradeCost))
         {
             // Implement upgrade logic here
             Debug.Log("Attack Speed Upgraded!");
         }
         else
         {
-            Debug.Log("Not enough coins!");
+            Debug.Log("Not enough souls!");
         }
     }
 
     void UpgradeAttackPower()
     {
-        if (CoinManager.instance.SpendCoins(attackPowerUpgradeCost))
+        if (SoulManager.instance.SpendSouls(attackPowerUpgradeCost))
         {
             // Implement upgrade logic here
             Debug.Log("Attack Power Upgraded!");
         }
         else
         {
-            Debug.Log("Not enough coins!");
+            Debug.Log("Not enough souls!");
         }
     }
 }
