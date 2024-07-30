@@ -76,7 +76,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 10e515dfd2434ef42964fddb695292f7, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 3cb8fa6984676c948b141da941c03f61, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -100,7 +100,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   health: 100
-  coinDrop: 1
+  soulDrop: 1
   speed: 5
   attackDamage: 10
   attackCooldown: 1

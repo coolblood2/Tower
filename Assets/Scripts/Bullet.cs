@@ -2,20 +2,17 @@ using UnityEngine;
 
 public class Bullet : MonoBehaviour
 {
-    public float speed = 10f;
-    public float damage = 100f;  // Adjust this value as needed
+    [SerializeField] private float speed = 10f;
+    [SerializeField] public float damage = 100f;
+
     private Transform target;
 
     public void Seek(Transform _target)
     {
         target = _target;
-
-        Vector2 direction = (target.position - transform.position).normalized;
-        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-        transform.rotation = Quaternion.Euler(new Vector3(0, 0, angle + 90));
     }
 
-    void Update()
+    private void Update()
     {
         if (target == null)
         {
@@ -23,38 +20,28 @@ public class Bullet : MonoBehaviour
             return;
         }
 
-        // Move towards the target
-        Vector2 direction = (Vector2)target.position - (Vector2)transform.position;
-        float distanceThisFrame = speed * Time.deltaTime;
+        // Calculate and apply rotation
+        Vector2 direction = (target.position - transform.position).normalized;
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
 
-        if (direction.magnitude <= distanceThisFrame)
+        // Move towards the target
+        transform.Translate(transform.right * speed * Time.deltaTime, Space.World);
+
+        // Check for target hit (same as before)
+        if (Vector2.Distance(transform.position, target.position) < 0.1f)
         {
             HitTarget();
-            return;
-        }
-
-        transform.Translate(direction.normalized * distanceThisFrame, Space.World);
-    }
-
-    void HitTarget()
-    {
-        if (target != null)
-        {
-            // Ensure the target has an Enemy script
-            Enemy enemy = target.GetComponent<Enemy>();
-            if (enemy != null)
-            {
-                enemy.TakeDamage(damage);  // Apply damage
-                Destroy(gameObject);  // Destroy the bullet
-            }
         }
     }
 
-    private void OnTriggerEnter2D(Collider2D other)
+    private void HitTarget()
     {
-        if (other.CompareTag("Enemy") && other.transform == target)
+        Enemy enemy = target.GetComponent<Enemy>();
+        if (enemy != null)
         {
-            HitTarget();  // Call HitTarget if the bullet collides with the intended enemy
+            enemy.TakeDamage(damage);
         }
+        Destroy(gameObject);
     }
 }

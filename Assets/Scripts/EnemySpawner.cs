@@ -1,31 +1,27 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections.Generic;
 
 public class EnemySpawner : MonoBehaviour
 {
-    public GameObject[] enemyPrefabs;
-    public float minSpawnInterval = 1.0f;
-    public float maxSpawnInterval = 3.0f;
-    public float minSpawnRadius = 8.0f;
-    public float maxSpawnRadius = 10.0f;
-    public Transform towerTransform;
-    public int minEnemiesPerWave = 1;
-    public int maxEnemiesPerWave = 5;
-    public float[] spawnProbabilities; // Array to hold spawn probabilities for each prefab
+    [SerializeField] private GameObject[] enemyPrefabs;
+    [SerializeField] private float minSpawnRadius = 8.0f;
+    [SerializeField] private float maxSpawnRadius = 10.0f;
+    [SerializeField] private Transform towerTransform;
+
+    [Header("Difficulty Settings")]
+    [SerializeField] private float initialMinSpawnInterval = 2f;
+    [SerializeField] private float initialMaxSpawnInterval = 3f;
+    [SerializeField] private int initialEnemiesPerWave = 5;
+    [SerializeField] private float difficultyIncreaseInterval = 30f;
+    [SerializeField] private float spawnIntervalDecreasePerLevel = 0.2f;
+    [SerializeField] private float prefabSpawnChanceIncreasePerLevel = 0.02f;
 
     private bool isSpawning = true;
-
-    // Difficulty Settings
-    public float initialMinSpawnInterval = 2f;
-    public float initialMaxSpawnInterval = 3f;
-    public int initialMaxEnemies = 5;
-    public float difficultyIncreaseInterval = 30f;
-    public int difficultyLevel = 0;
-    public float spawnIntervalDecreasePerLevel = 0.2f; // How much the interval decreases per level
-
     private float timeSinceLastDifficultyIncrease = 0f;
-
+    private float currentSpawnInterval;
+    private int currentEnemiesPerWave;
+    private float currentPrefabSpawnChance = 0.05f; // Initial low chance
 
     void Start()
     {
@@ -35,22 +31,13 @@ public class EnemySpawner : MonoBehaviour
             return;
         }
 
-        // Ensure spawn probabilities array matches the number of enemy prefabs
-        if (spawnProbabilities.Length != enemyPrefabs.Length)
-        {
-            Debug.LogError("Spawn probabilities array length must match enemy prefabs array length.");
-            return;
-        }
+        currentSpawnInterval = initialMaxSpawnInterval;
+        currentEnemiesPerWave = initialEnemiesPerWave;
 
         StartCoroutine(SpawnEnemies());
     }
 
-    public void StopSpawning()
-    {
-        isSpawning = false;
-    }
-
-    private void Update()
+    void Update()
     {
         timeSinceLastDifficultyIncrease += Time.deltaTime;
 
@@ -59,121 +46,48 @@ public class EnemySpawner : MonoBehaviour
             IncreaseDifficulty();
             timeSinceLastDifficultyIncrease = 0f;
         }
-
     }
-    
+
     private void IncreaseDifficulty()
     {
-        difficultyLevel++;
-
-        // Decrease spawn intervals based on difficulty level
-        minSpawnInterval = Mathf.Max(0.5f, initialMinSpawnInterval - (difficultyLevel * spawnIntervalDecreasePerLevel));
-        maxSpawnInterval = Mathf.Max(1f, initialMaxSpawnInterval - (difficultyLevel * spawnIntervalDecreasePerLevel));
-
-        // Increase max enemies on screen based on difficulty level
-        maxEnemiesPerWave = initialMaxEnemies + difficultyLevel;
-
-        // You can adjust other properties (speed, health, damage) here as well
+        // Adjust difficulty parameters based on the level or time
+        currentSpawnInterval = Mathf.Max(initialMinSpawnInterval / 2f, currentSpawnInterval - spawnIntervalDecreasePerLevel);
+        currentEnemiesPerWave++;
+        currentPrefabSpawnChance = Mathf.Min(0.25f, currentPrefabSpawnChance + prefabSpawnChanceIncreasePerLevel);
     }
+
     IEnumerator SpawnEnemies()
     {
         while (isSpawning)
         {
-            float waitTime = Random.Range(minSpawnInterval, maxSpawnInterval);
-            yield return new WaitForSeconds(waitTime);
+            yield return new WaitForSeconds(currentSpawnInterval);
 
-            int enemiesToSpawn = Random.Range(minEnemiesPerWave, maxEnemiesPerWave + 1);
-            List<Vector3> spawnPositions = new List<Vector3>(); // List to keep track of spawn positions
-            HashSet<Vector3> usedPositions = new HashSet<Vector3>(); // To keep track of used positions
-
-            // Generate spawn positions for the first prefab
-            for (int i = 0; i < enemiesToSpawn; i++)
+            for (int i = 0; i < currentEnemiesPerWave; i++)
             {
-                Vector3 spawnPosition = GetRandomPointOnCircle(minSpawnRadius, maxSpawnRadius, towerTransform.position, usedPositions);
-                spawnPositions.Add(spawnPosition);
-                usedPositions.Add(spawnPosition);
-            }
+                Vector3 spawnPosition = GetRandomSpawnPosition();
 
-            // Attempt to replace some spawn positions with other prefabs based on spawn probabilities
-            for (int j = 1; j < enemyPrefabs.Length; j++)
-            {
-                for (int i = 0; i < spawnPositions.Count; i++)
+                GameObject enemyToSpawn = enemyPrefabs[0]; // Default to the first prefab
+                if (Random.value < currentPrefabSpawnChance && enemyPrefabs.Length > 1)
                 {
-                    if (Random.value < spawnProbabilities[j])
-                    {
-                        spawnPositions[i] = Vector3.zero; // Mark position for replacement
-                        break;
-                    }
+                    // Low chance to choose a different prefab
+                    int randomIndex = Random.Range(1, enemyPrefabs.Length);
+                    enemyToSpawn = enemyPrefabs[randomIndex];
                 }
-            }
 
-            // Instantiate enemies at the calculated positions
-            for (int i = 0; i < spawnPositions.Count; i++)
-            {
-                if (spawnPositions[i] == Vector3.zero)
-                {
-                    // Replace with a different prefab based on probabilities
-                    int enemyIndex = GetRandomPrefabIndex();
-                    if (enemyIndex >= 1)
-                    {
-                        Vector3 spawnPosition = GetRandomPointOnCircle(minSpawnRadius, maxSpawnRadius, towerTransform.position, usedPositions);
-                        usedPositions.Add(spawnPosition);
-                        Instantiate(enemyPrefabs[enemyIndex], spawnPosition, Quaternion.identity);
-                    }
-                }
-                else
-                {
-                    // Spawn the first prefab
-                    Instantiate(enemyPrefabs[0], spawnPositions[i], Quaternion.identity);
-                }
+                Instantiate(enemyToSpawn, spawnPosition, Quaternion.identity);
             }
         }
-
     }
 
-
-
-
-
-
-    int GetRandomPrefabIndex()
+    Vector3 GetRandomSpawnPosition()
     {
-        float totalProbability = 0f;
-        for (int i = 1; i < spawnProbabilities.Length; i++)
-        {
-            totalProbability += spawnProbabilities[i];
-        }
-
-        float randomPoint = Random.value * totalProbability;
-        for (int i = 1; i < spawnProbabilities.Length; i++)
-        {
-            if (randomPoint < spawnProbabilities[i])
-            {
-                return i;
-            }
-            else
-            {
-                randomPoint -= spawnProbabilities[i];
-            }
-        }
-        return 0;
+        float angle = Random.Range(0f, 360f);
+        float radius = Random.Range(minSpawnRadius, maxSpawnRadius);
+        return towerTransform.position + new Vector3(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
     }
 
-    Vector3 GetRandomPointOnCircle(float minRadius, float maxRadius, Vector3 center, HashSet<Vector3> usedPositions)
+    public void StopSpawning()
     {
-        Vector3 spawnPosition;
-        int attempts = 0;
-        do
-        {
-            float radius = Random.Range(minRadius, maxRadius);
-            float angle = Random.Range(0f, 360f);
-            float x = center.x + radius * Mathf.Cos(angle * Mathf.Deg2Rad);
-            float y = center.y + radius * Mathf.Sin(angle * Mathf.Deg2Rad);
-            float z = center.z;
-            spawnPosition = new Vector3(x, y, z);
-            attempts++;
-        } while (usedPositions.Contains(spawnPosition) && attempts < 100); // Limit attempts to avoid infinite loop
-
-        return spawnPosition;
+        isSpawning = false;
     }
 }

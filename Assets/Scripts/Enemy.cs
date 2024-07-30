@@ -1,4 +1,9 @@
 using UnityEngine;
+using System.Collections.Generic;
+
+
+
+
 
 public class Enemy : MonoBehaviour
 {
@@ -11,7 +16,7 @@ public class Enemy : MonoBehaviour
     private Tower towerScript;
     private bool isDead = false;
     private float attackCooldownTimer = 0.0f;
-    private bool killedByPlayer = false;  // Flag to indicate if the enemy was killed by the player
+    //private bool killedByPlayer = false;  // Flag to indicate if the enemy was killed by the player
 
     private void OnTriggerEnter2D(Collider2D other)
     {
@@ -53,32 +58,39 @@ public class Enemy : MonoBehaviour
     public void TakeDamage(float amount)
     {
         health -= amount;
+
         if (health <= 0)
         {
-            killedByPlayer = true;  // Mark as killed by player
-            Die();
+            //killedByPlayer = true;
+            Die(); // Call Die() immediately when health is 0 or below
+            Destroy(gameObject);
         }
     }
+
 
     private void AttackTower()
     {
         if (towerScript != null)
         {
             towerScript.TakeDamage(attackDamage);
-            Destroy(gameObject);  // Destroy the enemy immediately after attacking
+            Die();
+            Destroy(gameObject);
         }
     }
 
     private void Die()
     {
-        if (isDead) return;  // Prevent multiple deaths
+        if (isDead) return;
         isDead = true;
 
-        if (killedByPlayer)
-        {
-            SoulManager.instance.AddSouls(soulDrop);  // Add souls if killed by player
-        }
-
-        Destroy(gameObject);
+        // Check for SoulManager.instance before using it
+        //if (killedByPlayer && SoulManager.instance != null)
+        //{
+        //    SoulManager.instance.AddSouls(soulDrop);
+        //}
+        //else if (killedByPlayer) // Log error only if the enemy was killed by the player
+        //{
+        //    Debug.LogError("SoulManager instance not found.");
+        //}
     }
 }

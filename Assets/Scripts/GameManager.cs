@@ -7,7 +7,7 @@ public class GameManager : MonoBehaviour
 {
     // UI Elements (consider using a more descriptive name like "gameEndUI")
     public GameObject gameOverScreen;
-    public TextMeshProUGUI totalCoinsText;
+    public TextMeshProUGUI totalSoulsText;
 
     // Components and Game Objects
     private EnemySpawner enemySpawner;

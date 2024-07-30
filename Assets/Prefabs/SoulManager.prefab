@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 1496391233668772639}
   - component: {fileID: 4829474830755529813}
   m_Layer: 0
-  m_Name: CoinManager
+  m_Name: SoulManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -44,3 +44,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 689fd12a2c811ff478664c061102b87c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  souls: 0
+  soulText: {fileID: 0}
